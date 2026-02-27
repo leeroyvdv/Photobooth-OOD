@@ -1,0 +1,70 @@
+﻿@page "/photobooth"
+@layout Shared.MainLayout
+
+<div class="photobooth-page">
+    <div class="content">
+
+        <div class="photobooth-wrapper">
+
+            <!-- STAP INDICATOR -->
+            <div class="steps-wrapper">
+                <div class="steps">
+                    <div id="step1" class="step active">
+                        <div class="circle">1</div>
+                        Foto maken
+                    </div>
+                    <div id="step2" class="step">
+                        <div class="circle">2</div>
+                        Controleren
+                    </div>
+                    <div id="step3" class="step">
+                        <div class="circle">3</div>
+                        Opslaan
+                    </div>
+                </div>
+            </div>
+
+            <!-- GRID -->
+            <div class="grid">
+
+                <!-- LINKS -->
+                <div class="card">
+                    <h3>📷 Camera</h3>
+
+                    <video id="video" muted playsinline></video>
+
+                    <div style="margin-top:14px;">
+                        <button class="btn-primary" onclick="startCameraHard()">Start</button>
+                        <button class="btn-secondary" onclick="takeSnapshot()">Snapshot</button>
+                        <button class="btn-danger" onclick="stopCamera()">Stop</button>
+                    </div>
+
+                    <hr />
+
+                    <p><strong>📁 Of upload een foto</strong></p>
+                    <input type="file" accept="image/*" onchange="uploadPhoto(event)" />
+
+                    <div id="status" class="status"></div>
+                </div>
+
+                <!-- RECHTS -->
+                <div class="card">
+                    <img id="snapshot" class="snapshot" style="display:none;" />
+
+                    <div class="action-bar">
+                        <button class="btn-success" onclick="saveSnapshot()">Opslaan</button>
+                        <button class="btn-secondary" onclick="downloadSnapshot()">Download</button>
+                    </div>
+
+                    <div class="validation-box">
+                        <h4>🔍 Validatie</h4>
+                        <ul id="validationList">
+                            <li>📷 Nog geen foto</li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>

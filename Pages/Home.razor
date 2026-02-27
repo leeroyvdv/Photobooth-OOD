@@ -1,0 +1,30 @@
+﻿@page "/"
+@layout Shared.MainLayout
+
+<div class="card" style="max-width:900px;">
+    <h1>📸 DigiPhotoBooth</h1>
+
+    <p>
+        DigiPhotoBooth is een interactieve applicatie voor het maken en verwerken
+        van digitale pasfoto’s in een fotohokje-omgeving.
+    </p>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin:30px 0;">
+        <div class="card">
+            <h3>📷 Foto maken</h3>
+            <p>Maak direct een foto met de ingebouwde camera.</p>
+        </div>
+        <div class="card">
+            <h3>📁 Uploaden</h3>
+            <p>Upload een bestaande foto vanaf je apparaat.</p>
+        </div>
+        <div class="card">
+            <h3>💾 Opslaan</h3>
+            <p>Sla de foto op of download deze voor verder gebruik.</p>
+        </div>
+    </div>
+
+    <button class="btn-primary" onclick="location.href='/photobooth'">
+        Start PhotoBooth
+    </button>
+</div>
