@@ -1,7 +1,6 @@
-using PhotoBooth.Data;
+﻿using PhotoBooth.Data;
 using Microsoft.EntityFrameworkCore;
 using PhotoBooth.Services;
-using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,5 +22,12 @@ app.UseRouting();
 app.MapControllers();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
+
+// 🔥 AUTO MIGRATE
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+}
 
 app.Run();
