@@ -30,4 +30,5 @@ using (var scope = app.Services.CreateScope())
     db.Database.Migrate();
 }
 
+
 app.Run();
