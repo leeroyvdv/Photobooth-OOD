@@ -1,4 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using PhotoBooth.Data;
+using PhotoBooth.Domain;
 
 namespace PhotoBooth.Controllers
 {
@@ -6,22 +9,46 @@ namespace PhotoBooth.Controllers
     [Route("api/validate-photo")]
     public class PhotoValidationController : ControllerBase
     {
-        [HttpPost]
-        public IActionResult Validate([FromBody] PhotoValidationRequest request)
-        {
-            if (request?.Base64Image == null)
-            {
-                return BadRequest();
-            }
+        private readonly AppDbContext _context;
 
-            // Mock response (wordt momenteel niet gebruikt)
+        public PhotoValidationController(AppDbContext context)
+        {
+            _context = context;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Validate([FromBody] PhotoValidationRequest request)
+        {
+            if (string.IsNullOrEmpty(request?.Base64Image))
+                return BadRequest("No image received.");
+
+            var imageBytes = Convert.FromBase64String(request.Base64Image);
+
+            var photo = new Photo
+            {
+                Data = imageBytes,
+                ContentType = "image/png",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Photos.Add(photo);
+            await _context.SaveChangesAsync();
+
             return Ok(new
             {
                 faceDetected = true,
                 eyesVisible = true,
                 neutralExpression = true,
-                lightingOk = true
+                lightingOk = true,
+                savedPhotoId = photo.Id
             });
+        }
+
+        [HttpGet("count")]
+        public async Task<IActionResult> Count()
+        {
+            var count = await _context.Photos.CountAsync();
+            return Ok(count);
         }
     }
 
