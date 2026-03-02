@@ -15,8 +15,11 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.4" />
   </ItemGroup>
 
+  <!-- Zorgt dat alle AI-modellen mee worden gepubliceerd -->
   <ItemGroup>
-    <Folder Include="wwwroot\models\" />
+    <Content Include="wwwroot\models\**\*">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>
