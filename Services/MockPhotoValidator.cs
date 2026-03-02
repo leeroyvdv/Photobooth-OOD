@@ -1,9 +1,10 @@
-﻿using PhotoBooth.Domain;
+﻿using PhotoBooth.Application.Interfaces;
+using PhotoBooth.Domain;
 using System.Threading.Tasks;
 
 namespace PhotoBooth.Services
 {
-    public class MockPhotoValidator : IPhotoValidator
+    public class MockPhotoValidator : Application.Interfaces.IPhotoRepository
     {
         public Task<PhotoValidationResult> ValidateAsync(Photo photo)
         {

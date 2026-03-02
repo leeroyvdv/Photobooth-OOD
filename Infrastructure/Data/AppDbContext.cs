@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PhotoBooth.Domain;
 
-namespace PhotoBooth.Data;
+namespace PhotoBooth.Infrastructure.Data;
 
 public class AppDbContext : DbContext
 {
