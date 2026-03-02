@@ -121,6 +121,7 @@ function uploadPhoto(event) {
    VALIDATIE
 ================================ */
 function runValidation(canvas) {
+
     const list = document.getElementById("validationList");
     if (!list) return;
 
@@ -129,25 +130,79 @@ function runValidation(canvas) {
     const ctx = canvas.getContext("2d");
     const { width, height } = canvas;
 
-    const data = ctx.getImageData(
-        width * 0.2,
-        height * 0.2,
-        width * 0.6,
-        height * 0.6
+    function analyze(data) {
+        let brightness = 0;
+        let contrast = 0;
+
+        for (let i = 0; i < data.data.length; i += 4) {
+            const avg = (data.data[i] + data.data[i + 1] + data.data[i + 2]) / 3;
+            brightness += avg;
+            contrast += Math.abs(avg - 128);
+        }
+
+        const pixels = data.data.length / 4;
+
+        return {
+            brightness: brightness / pixels,
+            contrast: contrast / pixels
+        };
+    }
+
+    const center = ctx.getImageData(
+        width * 0.3,
+        height * 0.25,
+        width * 0.4,
+        height * 0.5
     );
 
-    let brightness = 0;
-    for (let i = 0; i < data.data.length; i += 4) {
-        brightness += (data.data[i] + data.data[i + 1] + data.data[i + 2]) / 3;
-    }
+    const left = ctx.getImageData(
+        width * 0.2,
+        height * 0.25,
+        width * 0.15,
+        height * 0.5
+    );
 
-    brightness /= (data.data.length / 4);
+    const right = ctx.getImageData(
+        width * 0.65,
+        height * 0.25,
+        width * 0.15,
+        height * 0.5
+    );
 
-    if (brightness > 60) {
-        list.innerHTML += "<li>✅ Belichting in orde</li>";
-    } else {
-        list.innerHTML += "<li>❌ Te donker</li>";
-    }
+    const full = ctx.getImageData(
+        width * 0.1,
+        height * 0.1,
+        width * 0.8,
+        height * 0.8
+    );
+
+    const c = analyze(center);
+    const l = analyze(left);
+    const r = analyze(right);
+    const f = analyze(full);
+
+    const symmetryDiff = Math.abs(l.contrast - r.contrast);
+
+    const faceDetected = c.contrast > 18;
+    const faceCentered = faceDetected && symmetryDiff < 20;
+    const lightingOk = f.brightness > 50;
+    const eyesVisible = faceDetected && faceCentered && c.brightness > 55;
+
+    list.innerHTML += faceDetected
+        ? "<li>✅ Gezicht gedetecteerd</li>"
+        : "<li>❌ Geen gezicht gedetecteerd</li>";
+
+    list.innerHTML += faceCentered
+        ? "<li>✅ Gezicht in het midden</li>"
+        : "<li>❌ Gezicht niet in het midden</li>";
+
+    list.innerHTML += eyesVisible
+        ? "<li>✅ Ogen goed zichtbaar</li>"
+        : "<li>❌ Ogen niet goed zichtbaar</li>";
+
+    list.innerHTML += lightingOk
+        ? "<li>✅ Belichting in orde</li>"
+        : "<li>❌ Belichting onvoldoende</li>";
 }
 
 /* ===============================
