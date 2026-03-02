@@ -1,7 +1,20 @@
 ﻿let stream = null;
 let lastSnapshot = null;
+let modelsLoaded = false;
 
-console.log("CAMERA JS LOADED V3");
+console.log("CAMERA JS AI VERSION LOADED");
+
+/* ===============================
+   MODEL LOAD
+================================ */
+async function loadModels() {
+    await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
+    await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
+    modelsLoaded = true;
+    console.log("Face-api models loaded");
+}
+
+loadModels();
 
 /* ===============================
    STATUS
@@ -53,7 +66,7 @@ function stopCamera() {
 /* ===============================
    SNAPSHOT
 ================================ */
-function takeSnapshot() {
+async function takeSnapshot() {
     const video = document.getElementById("video");
     if (!video || !video.srcObject) {
         setStatus("❌ Camera niet actief", "error");
@@ -73,7 +86,7 @@ function takeSnapshot() {
     img.src = canvas.toDataURL("image/png");
     img.style.display = "block";
 
-    runValidation(canvas);
+    await runValidation(canvas);
 
     setStatus("📸 Foto genomen");
     setStep("step2");
@@ -82,13 +95,13 @@ function takeSnapshot() {
 /* ===============================
    UPLOAD
 ================================ */
-function uploadPhoto(event) {
+async function uploadPhoto(event) {
     const file = event.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
 
-    reader.onload = function (e) {
+    reader.onload = async function (e) {
         const img = document.getElementById("snapshot");
         img.src = e.target.result;
         img.style.display = "block";
@@ -96,7 +109,7 @@ function uploadPhoto(event) {
         const canvas = document.createElement("canvas");
         const image = new Image();
 
-        image.onload = function () {
+        image.onload = async function () {
             canvas.width = image.width;
             canvas.height = image.height;
 
@@ -105,7 +118,7 @@ function uploadPhoto(event) {
 
             lastSnapshot = canvas;
 
-            runValidation(canvas);
+            await runValidation(canvas);
 
             setStatus("📁 Foto geüpload");
             setStep("step2");
@@ -118,78 +131,62 @@ function uploadPhoto(event) {
 }
 
 /* ===============================
-   VALIDATIE
+   AI VALIDATION
 ================================ */
-function runValidation(canvas) {
+async function runValidation(canvas) {
 
     const list = document.getElementById("validationList");
     if (!list) return;
 
     list.innerHTML = "";
 
+    if (!modelsLoaded) {
+        list.innerHTML += "<li>⏳ AI modellen laden...</li>";
+        return;
+    }
+
+    const detection = await faceapi
+        .detectSingleFace(canvas, new faceapi.TinyFaceDetectorOptions())
+        .withFaceLandmarks();
+
     const ctx = canvas.getContext("2d");
     const { width, height } = canvas;
 
-    function analyze(data) {
-        let brightness = 0;
-        let contrast = 0;
+    let faceDetected = false;
+    let faceCentered = false;
+    let eyesVisible = false;
+    let lightingOk = false;
 
-        for (let i = 0; i < data.data.length; i += 4) {
-            const avg = (data.data[i] + data.data[i + 1] + data.data[i + 2]) / 3;
-            brightness += avg;
-            contrast += Math.abs(avg - 128);
-        }
+    if (detection) {
+        faceDetected = true;
 
-        const pixels = data.data.length / 4;
+        const box = detection.detection.box;
+        const centerX = box.x + box.width / 2;
+        const imageCenterX = width / 2;
 
-        return {
-            brightness: brightness / pixels,
-            contrast: contrast / pixels
-        };
+        faceCentered = Math.abs(centerX - imageCenterX) < width * 0.15;
+
+        const leftEye = detection.landmarks.getLeftEye();
+        const rightEye = detection.landmarks.getRightEye();
+
+        eyesVisible = leftEye.length > 0 && rightEye.length > 0;
     }
 
-    const center = ctx.getImageData(
-        width * 0.3,
-        height * 0.25,
-        width * 0.4,
-        height * 0.5
-    );
+    // Lighting check
+    const imageData = ctx.getImageData(0, 0, width, height);
+    let brightness = 0;
 
-    const left = ctx.getImageData(
-        width * 0.2,
-        height * 0.25,
-        width * 0.15,
-        height * 0.5
-    );
+    for (let i = 0; i < imageData.data.length; i += 4) {
+        brightness += (imageData.data[i] +
+            imageData.data[i + 1] +
+            imageData.data[i + 2]) / 3;
+    }
 
-    const right = ctx.getImageData(
-        width * 0.65,
-        height * 0.25,
-        width * 0.15,
-        height * 0.5
-    );
-
-    const full = ctx.getImageData(
-        width * 0.1,
-        height * 0.1,
-        width * 0.8,
-        height * 0.8
-    );
-
-    const c = analyze(center);
-    const l = analyze(left);
-    const r = analyze(right);
-    const f = analyze(full);
-
-    const symmetryDiff = Math.abs(l.contrast - r.contrast);
-
-    const faceDetected = c.contrast > 18;
-    const faceCentered = faceDetected && symmetryDiff < 20;
-    const lightingOk = f.brightness > 50;
-    const eyesVisible = faceDetected && faceCentered && c.brightness > 55;
+    brightness /= (imageData.data.length / 4);
+    lightingOk = brightness > 60;
 
     list.innerHTML += faceDetected
-        ? "<li>✅ Gezicht gedetecteerd</li>"
+        ? "<li>✅ Gezicht gedetecteerd (AI)</li>"
         : "<li>❌ Geen gezicht gedetecteerd</li>";
 
     list.innerHTML += faceCentered
@@ -197,8 +194,8 @@ function runValidation(canvas) {
         : "<li>❌ Gezicht niet in het midden</li>";
 
     list.innerHTML += eyesVisible
-        ? "<li>✅ Ogen goed zichtbaar</li>"
-        : "<li>❌ Ogen niet goed zichtbaar</li>";
+        ? "<li>✅ Ogen gedetecteerd</li>"
+        : "<li>❌ Ogen niet gedetecteerd</li>";
 
     list.innerHTML += lightingOk
         ? "<li>✅ Belichting in orde</li>"
