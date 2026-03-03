@@ -1,6 +1,2 @@
-.vs
-.bin
-.obj
-photobooth/photobooth/bin/
-Photobooth/Photobooth/bin/
-Photobooth/Photobooth/obj/
+bin/
+obj/
