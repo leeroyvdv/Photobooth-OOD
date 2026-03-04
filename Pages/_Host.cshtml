@@ -5,22 +5,29 @@
 <html lang="nl">
 <head>
     <meta charset="utf-8" />
+
+    <!-- Zorgt dat de site goed schaalt op mobiel/tablet -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Basis pad van de applicatie -->
     <base href="~/" />
+
+    <!-- CSS bestand voor styling van de app -->
     <link href="app.css" rel="stylesheet" />
 </head>
 <body>
     <app>
+        <!-- Startpunt van de Blazor applicatie -->
         <component type="typeof(global::PhotoBooth.App)" render-mode="Server" />
     </app>
 
-    <!-- Blazor -->
+    <!-- Script dat Blazor Server laat werken -->
     <script src="_framework/blazor.server.js"></script>
 
-    <!-- Face API -->
+    <!-- Library voor face detection (wordt gebruikt om een gezicht te detecteren) -->
     <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 
-    <!-- Camera Logic -->
+    <!-- Eigen JavaScript voor camera logica -->
     <script defer src="camera.js"></script>
 </body>
 </html>
